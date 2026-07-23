@@ -96,10 +96,11 @@
   <div class="updated" id="updated"></div>
 
   <div class="tiles">
-    <div class="tile"><div class="n" id="t-active">–</div><div class="l">active matches right now</div></div>
+    <div class="tile"><div class="n" id="t-active">–</div><div class="l">active single family right now</div></div>
+    <div class="tile"><div class="n" id="t-mf">–</div><div class="l">multi-family (duplex/triplex)</div></div>
+    <div class="tile"><div class="n" id="t-55sold">–</div><div class="l">homes for sale in 55+ communities</div></div>
     <div class="tile newT"><div class="n" id="t-new">–</div><div class="l">new listings caught by tracker</div></div>
     <div class="tile"><div class="n" id="t-towns">7</div><div class="l">towns watched</div></div>
-    <div class="tile"><div class="n" id="t-mf">–</div><div class="l">multi-family (duplex/triplex)</div></div>
     <div class="tile"><div class="n">15-min</div><div class="l">checks, with email alerts</div></div>
   </div>
 
@@ -328,6 +329,7 @@
   document.getElementById('tab-sf-n').textContent = inv.length;
   document.getElementById('tab-mf-n').textContent = mfInv.length;
   document.getElementById('tab-c55-n').textContent = comms.length;
+  document.getElementById('t-55sold').textContent = comms.reduce(function(s,c){ return s + (Number(c.forSale)||0); }, 0);
   setTab('sf');
 })();
 </script>
