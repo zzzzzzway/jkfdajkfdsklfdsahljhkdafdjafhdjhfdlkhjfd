@@ -74,7 +74,7 @@
   .panel[hidden]{display:none;}
   .panel h2:first-child{margin-top:14px;}
   h2.collapsible{cursor:pointer; user-select:none;}
-  h2.collapsible .caret{margin-left:auto; color:var(--ink3); font-size:1em; line-height:1; transition:transform .15s; padding-left:8px;}
+  h2.collapsible .caret{margin-left:auto; color:var(--ink3); font-size:1.5em; line-height:1; transition:transform .15s; padding-left:8px;}
   h2.collapsible:hover .caret{color:var(--accent);}
   h2.collapsible.collapsed .caret{transform:rotate(-90deg);}
   .controls .rng{flex:0 1 108px; min-width:76px;}
@@ -113,10 +113,10 @@
     <div class="tile"><div class="n">every 3h</div><div class="l">checks, with email alerts</div></div>
   </div>
 
-  <h2 class="collapsible" data-target="mktwrap">📈 Market context <span class="caret">▾</span></h2>
+  <h2 class="collapsible" data-target="mktwrap">📈 Market context <span class="caret">▼</span></h2>
   <div id="mktwrap"></div>
 
-  <h2 class="collapsible" data-target="chart"><span id="chart-h">Matches by town</span> <span class="caret">▾</span></h2>
+  <h2 class="collapsible" data-target="chart"><span id="chart-h">Matches by town</span> <span class="caret">▼</span></h2>
   <div class="chart" id="chart"></div>
 
   <div class="tabbar" id="tabbar">
