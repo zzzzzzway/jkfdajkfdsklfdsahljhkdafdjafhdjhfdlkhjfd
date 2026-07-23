@@ -77,6 +77,11 @@
   h2.collapsible .caret{margin-left:auto; color:var(--ink3); font-size:11px; transition:transform .15s; padding-left:8px;}
   h2.collapsible:hover .caret{color:var(--accent);}
   h2.collapsible.collapsed .caret{transform:rotate(-90deg);}
+  .controls .rng{flex:0 1 108px; min-width:76px;}
+  .rnglbl{align-self:center; color:var(--ink2); font-size:12.5px; font-weight:600; white-space:nowrap;}
+  .controls .dash{align-self:center; color:var(--ink3);}
+  .rngclear{background:var(--chip); border:1px solid transparent; color:var(--ink2); border-radius:8px; padding:6px 11px; font-size:12.5px; cursor:pointer; font-weight:600; align-self:center;}
+  .rngclear:hover{color:var(--accent); border-color:var(--accent);}
   .tooltip{position:fixed; pointer-events:none; background:var(--ink); color:var(--surface); font-size:12px; padding:4px 8px; border-radius:6px; opacity:0; transition:opacity .1s; z-index:9;}
   .mktwrap2{background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:auto; max-height:480px; margin-top:8px;}
   .mkt{width:100%; border-collapse:collapse; font-size:12.5px; min-width:880px;}
@@ -137,6 +142,17 @@
         <option value="sqft">Sqft ↓</option>
       </select>
     </div>
+    <div class="controls">
+      <span class="rnglbl">Price</span>
+      <input class="rng" id="pmin" type="number" inputmode="numeric" placeholder="Min $">
+      <span class="dash">–</span>
+      <input class="rng" id="pmax" type="number" inputmode="numeric" placeholder="Max $">
+      <span class="rnglbl">Year built</span>
+      <input class="rng" id="ymin" type="number" inputmode="numeric" placeholder="Min">
+      <span class="dash">–</span>
+      <input class="rng" id="ymax" type="number" inputmode="numeric" placeholder="Max">
+      <button class="rngclear" id="rngclear">Clear</button>
+    </div>
     <div class="controls" id="townchips"></div>
     <div class="cardlist" id="all-list"></div>
   </section>
@@ -145,6 +161,17 @@
     <h2>🏢 Multi-family — duplex / triplex <span class="count-pill" id="c-mf"></span></h2>
     <div class="sub" style="margin:-4px 0 8px">2–3 unit properties (duplex &amp; triplex) for sale across the 7 towns. New ones are alerted the same as single-family.</div>
     <div id="mf-new"></div>
+    <div class="controls">
+      <span class="rnglbl">Price</span>
+      <input class="rng" id="mf-pmin" type="number" inputmode="numeric" placeholder="Min $">
+      <span class="dash">–</span>
+      <input class="rng" id="mf-pmax" type="number" inputmode="numeric" placeholder="Max $">
+      <span class="rnglbl">Year built</span>
+      <input class="rng" id="mf-ymin" type="number" inputmode="numeric" placeholder="Min">
+      <span class="dash">–</span>
+      <input class="rng" id="mf-ymax" type="number" inputmode="numeric" placeholder="Max">
+      <button class="rngclear" id="mf-rngclear">Clear</button>
+    </div>
     <div class="controls" id="mf-townchips"></div>
     <div class="cardlist" id="mf-list"></div>
   </section>
@@ -168,6 +195,8 @@
   var DATA = JSON.parse(document.getElementById('tracker-data').textContent);
   var TOWNS = ["Raleigh","Durham","Chapel Hill","Cary","Apex","Morrisville","Holly Springs"];
   var fmt$ = function(n){ return n==null ? "$–" : "$" + Number(n).toLocaleString(); };
+  function num(id){ var el=document.getElementById(id); if(!el) return null; var v=parseFloat(el.value); return isNaN(v)?null:v; }
+  function inRange(v, mn, mx){ if(mn!=null && (v==null || v<mn)) return false; if(mx!=null && (v==null || v>mx)) return false; return true; }
 
   function freshRank(b){
     b = (b||"").toLowerCase();
@@ -262,11 +291,16 @@
   });
   document.getElementById('q').addEventListener('input', function(ev){ q = ev.target.value.toLowerCase(); renderAll(); });
   document.getElementById('sort').addEventListener('change', function(ev){ sortBy = ev.target.value; renderAll(); });
+  ['pmin','pmax','ymin','ymax'].forEach(function(id){ document.getElementById(id).addEventListener('input', renderAll); });
+  document.getElementById('rngclear').addEventListener('click', function(){ ['pmin','pmax','ymin','ymax'].forEach(function(id){ document.getElementById(id).value=''; }); renderAll(); });
 
   function renderAll(){
+    var pmin=num('pmin'), pmax=num('pmax'), ymin=num('ymin'), ymax=num('ymax');
     var rows = inv.filter(function(e){
       if(townFilter && e.town !== townFilter) return false;
       if(q && (e.address||"").toLowerCase().indexOf(q) === -1) return false;
+      if(!inRange(e.price, pmin, pmax)) return false;
+      if((ymin!=null || ymax!=null) && !inRange(e.yearBuilt, ymin, ymax)) return false;
       return true;
     });
     if(sortBy==="fresh") rows.sort(function(a,b){ return freshRank(a.badge)-freshRank(b.badge) || (b.price||0)-(a.price||0); });
@@ -300,10 +334,18 @@
     renderMF();
   });
   function renderMF(){
-    var rows = mfInv.filter(function(e){ return !mfTownFilter || e.town===mfTownFilter; });
+    var pmin=num('mf-pmin'), pmax=num('mf-pmax'), ymin=num('mf-ymin'), ymax=num('mf-ymax');
+    var rows = mfInv.filter(function(e){
+      if(mfTownFilter && e.town!==mfTownFilter) return false;
+      if(!inRange(e.price, pmin, pmax)) return false;
+      if((ymin!=null || ymax!=null) && !inRange(e.yearBuilt, ymin, ymax)) return false;
+      return true;
+    });
     rows.sort(function(a,b){ return freshRank(a.badge)-freshRank(b.badge) || (b.price||0)-(a.price||0); });
     document.getElementById('mf-list').innerHTML = rows.length ? rows.map(function(e){return card(e);}).join("") : '<div class="empty">No multi-family listings for that filter.</div>';
   }
+  ['mf-pmin','mf-pmax','mf-ymin','mf-ymax'].forEach(function(id){ document.getElementById(id).addEventListener('input', renderMF); });
+  document.getElementById('mf-rngclear').addEventListener('click', function(){ ['mf-pmin','mf-pmax','mf-ymin','mf-ymax'].forEach(function(id){ document.getElementById(id).value=''; }); renderMF(); });
   if(mfInv.length){ renderMF(); }
   else { document.getElementById('mf-list').innerHTML = '<div class="empty">No duplex/triplex listings in the tracked towns right now — new ones will appear here (and in your email) when posted.</div>'; }
 
