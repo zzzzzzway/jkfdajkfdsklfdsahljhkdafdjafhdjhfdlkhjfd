@@ -65,6 +65,14 @@
   .chipbtn.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
   select{background:var(--card); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:7px 9px; font-size:12.5px;}
   .foot{color:var(--ink3); font-size:12px; margin-top:34px; border-top:1px solid var(--line); padding-top:12px;}
+  .tabbar{display:flex; gap:4px; margin:22px 0 4px; border-bottom:1px solid var(--line); flex-wrap:wrap;}
+  .tab{background:none; border:none; border-bottom:2px solid transparent; color:var(--ink2); font:600 14px/1 inherit; padding:11px 15px; cursor:pointer; border-radius:8px 8px 0 0; display:flex; align-items:center; gap:6px;}
+  .tab:hover{color:var(--ink); background:var(--chip);}
+  .tab.on{color:var(--accent); border-bottom-color:var(--accent);}
+  .tab .tc{background:var(--chip); color:var(--ink2); border-radius:99px; font-size:11px; padding:1px 7px; font-weight:700;}
+  .tab.on .tc{background:var(--accent-soft); color:var(--accent);}
+  .panel[hidden]{display:none;}
+  .panel h2:first-child{margin-top:14px;}
   .tooltip{position:fixed; pointer-events:none; background:var(--ink); color:var(--surface); font-size:12px; padding:4px 8px; border-radius:6px; opacity:0; transition:opacity .1s; z-index:9;}
   .mktwrap2{background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:auto; max-height:480px; margin-top:8px;}
   .mkt{width:100%; border-collapse:collapse; font-size:12.5px; min-width:880px;}
@@ -95,39 +103,51 @@
     <div class="tile"><div class="n">15-min</div><div class="l">checks, with email alerts</div></div>
   </div>
 
-  <h2>✨ New listings <span class="count-pill" id="c-new"></span></h2>
-  <div id="new-list"></div>
+  <div class="tabbar" id="tabbar">
+    <button class="tab on" data-tab="sf">🏠 Single-family <span class="tc" id="tab-sf-n"></span></button>
+    <button class="tab" data-tab="mf">🏢 Multi-family <span class="tc" id="tab-mf-n"></span></button>
+    <button class="tab" data-tab="c55">🏊 55+ communities <span class="tc" id="tab-c55-n"></span></button>
+  </div>
 
-  <h2>Matches by town</h2>
+  <section class="panel" data-panel="sf">
+    <h2>✨ New listings <span class="count-pill" id="c-new"></span></h2>
+    <div id="new-list"></div>
+
+    <h2>Freshest on the market</h2>
+    <div class="cardlist" id="fresh-list"></div>
+
+    <h2>All current matches <span class="count-pill" id="c-all"></span></h2>
+    <div class="controls">
+      <input id="q" type="search" placeholder="Filter by street, town or ZIP…">
+      <select id="sort">
+        <option value="fresh">Sort: freshest</option>
+        <option value="priceAsc">Price ↑</option>
+        <option value="priceDesc">Price ↓</option>
+        <option value="sqft">Sqft ↓</option>
+      </select>
+    </div>
+    <div class="controls" id="townchips"></div>
+    <div class="cardlist" id="all-list"></div>
+  </section>
+
+  <section class="panel" data-panel="mf" hidden>
+    <h2>🏢 Multi-family — duplex / triplex <span class="count-pill" id="c-mf"></span></h2>
+    <div class="sub" style="margin:-4px 0 8px">2–3 unit properties (duplex &amp; triplex) for sale across the 7 towns. New ones are alerted the same as single-family.</div>
+    <div id="mf-new"></div>
+    <div class="controls" id="mf-townchips"></div>
+    <div class="cardlist" id="mf-list"></div>
+  </section>
+
+  <section class="panel" data-panel="c55" hidden>
+    <h2>🏊 55+ communities in the area <span class="count-pill" id="c-comm"></span></h2>
+    <div class="commgrid" id="comm55"></div>
+  </section>
+
+  <h2 id="chart-h">Matches by town</h2>
   <div class="chart" id="chart"></div>
-
-  <h2>🏢 Multi-family — duplex / triplex <span class="count-pill" id="c-mf"></span></h2>
-  <div class="sub" style="margin:-4px 0 8px">2–3 unit properties (duplex &amp; triplex) for sale across the 7 towns. New ones are alerted the same as single-family.</div>
-  <div id="mf-new"></div>
-  <div class="controls" id="mf-townchips"></div>
-  <div class="cardlist" id="mf-list"></div>
-
-  <h2>🏊 55+ communities in the area <span class="count-pill" id="c-comm"></span></h2>
-  <div class="commgrid" id="comm55"></div>
 
   <h2>📈 Market context</h2>
   <div id="mktwrap"></div>
-
-  <h2>Freshest on the market</h2>
-  <div class="cardlist" id="fresh-list"></div>
-
-  <h2>All current matches <span class="count-pill" id="c-all"></span></h2>
-  <div class="controls">
-    <input id="q" type="search" placeholder="Filter by street, town or ZIP…">
-    <select id="sort">
-      <option value="fresh">Sort: freshest</option>
-      <option value="priceAsc">Price ↑</option>
-      <option value="priceDesc">Price ↓</option>
-      <option value="sqft">Sqft ↓</option>
-    </select>
-  </div>
-  <div class="controls" id="townchips"></div>
-  <div class="cardlist" id="all-list"></div>
 
   <div class="foot">
     Source: Zillow public search pages, checked every 15 minutes. New finds are verified against the listing's detail page before alerting. Multi-family covers 2–3 unit duplex/triplex listings; larger apartment buildings are filtered out.
@@ -183,21 +203,15 @@
   if(news.length){ nl.innerHTML = '<div class="cardlist">' + news.map(function(e){return card(e,true);}).join("") + '</div>'; }
   else { nl.innerHTML = '<div class="empty">Nothing new caught yet — the tracker checks every hour and new listings will appear here (and in your email) the hour they’re posted. Below is the full inventory snapshot.</div>'; }
 
-  // single-hue count-by-town bar (direct labels, no legend needed)
-  var counts = TOWNS.map(function(t){ return {t:t, n: inv.filter(function(e){return e.town===t;}).length}; });
-  var max = Math.max.apply(null, counts.map(function(c){return c.n;}).concat([1]));
+  // count-by-town bar chart — content is filled per active tab by renderChart() below
   var tt = document.getElementById('tt');
-  document.getElementById('chart').innerHTML = counts.map(function(c){
-    return '<div class="brow"><div class="t">' + c.t + '</div>' +
-      '<div><div class="bar" data-t="' + c.t + ': ' + c.n + ' matching listings" style="width:' + Math.max(2, Math.round(c.n/max*100)) + '%"></div></div>' +
-      '<div class="v">' + c.n + '</div></div>';
-  }).join("");
-  document.getElementById('chart').addEventListener('mousemove', function(ev){
+  var chartEl = document.getElementById('chart');
+  chartEl.addEventListener('mousemove', function(ev){
     var b = ev.target.closest('.bar');
     if(b){ tt.textContent = b.getAttribute('data-t'); tt.style.opacity = 1; tt.style.left = (ev.clientX+12)+'px'; tt.style.top = (ev.clientY-10)+'px'; }
     else tt.style.opacity = 0;
   });
-  document.getElementById('chart').addEventListener('mouseleave', function(){ tt.style.opacity = 0; });
+  chartEl.addEventListener('mouseleave', function(){ tt.style.opacity = 0; });
 
   var comms = DATA.communities || [];
   document.getElementById('c-comm').textContent = comms.length;
@@ -287,6 +301,34 @@
   }
   if(mfInv.length){ renderMF(); }
   else { document.getElementById('mf-list').innerHTML = '<div class="empty">No duplex/triplex listings in the tracked towns right now — new ones will appear here (and in your email) when posted.</div>'; }
+
+  // ---- Tabs + shared "by town" chart (chart reflects the active tab) ----
+  function townCounts(list){ return TOWNS.map(function(t){ return {t:t, n:list.filter(function(e){return e.town===t;}).length}; }); }
+  function renderChart(tab){
+    var data, label, heading;
+    if(tab==='mf'){ data=townCounts(mfInv); label='listings'; heading='Multi-family by town'; }
+    else if(tab==='c55'){ data=TOWNS.map(function(t){ return {t:t, n:comms.filter(function(c){return (c.town||"")===t;}).length}; }); label='communities'; heading='55+ communities by town'; }
+    else { data=townCounts(inv); label='matching listings'; heading='Matches by town'; }
+    document.getElementById('chart-h').textContent = heading;
+    var max = Math.max.apply(null, data.map(function(c){return c.n;}).concat([1]));
+    chartEl.innerHTML = data.map(function(c){
+      return '<div class="brow"><div class="t">'+c.t+'</div>'+
+        '<div><div class="bar" data-t="'+c.t+': '+c.n+' '+label+'" style="width:'+Math.max(2,Math.round(c.n/max*100))+'%"></div></div>'+
+        '<div class="v">'+c.n+'</div></div>';
+    }).join("");
+  }
+  var tabbar = document.getElementById('tabbar');
+  var panels = document.querySelectorAll('.panel');
+  function setTab(tab){
+    Array.prototype.forEach.call(tabbar.children, function(b){ b.classList.toggle('on', b.getAttribute('data-tab')===tab); });
+    Array.prototype.forEach.call(panels, function(p){ p.hidden = p.getAttribute('data-panel')!==tab; });
+    renderChart(tab);
+  }
+  tabbar.addEventListener('click', function(ev){ var b=ev.target.closest('.tab'); if(!b) return; setTab(b.getAttribute('data-tab')); });
+  document.getElementById('tab-sf-n').textContent = inv.length;
+  document.getElementById('tab-mf-n').textContent = mfInv.length;
+  document.getElementById('tab-c55-n').textContent = comms.length;
+  setTab('sf');
 })();
 </script>
 </body>
