@@ -73,6 +73,10 @@
   .tab.on .tc{background:var(--accent-soft); color:var(--accent);}
   .panel[hidden]{display:none;}
   .panel h2:first-child{margin-top:14px;}
+  h2.collapsible{cursor:pointer; user-select:none;}
+  h2.collapsible .caret{margin-left:auto; color:var(--ink3); font-size:11px; transition:transform .15s; padding-left:8px;}
+  h2.collapsible:hover .caret{color:var(--accent);}
+  h2.collapsible.collapsed .caret{transform:rotate(-90deg);}
   .tooltip{position:fixed; pointer-events:none; background:var(--ink); color:var(--surface); font-size:12px; padding:4px 8px; border-radius:6px; opacity:0; transition:opacity .1s; z-index:9;}
   .mktwrap2{background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:auto; max-height:480px; margin-top:8px;}
   .mkt{width:100%; border-collapse:collapse; font-size:12.5px; min-width:880px;}
@@ -104,10 +108,10 @@
     <div class="tile"><div class="n">15-min</div><div class="l">checks, with email alerts</div></div>
   </div>
 
-  <h2>📈 Market context</h2>
+  <h2 class="collapsible" data-target="mktwrap">📈 Market context <span class="caret">▾</span></h2>
   <div id="mktwrap"></div>
 
-  <h2 id="chart-h">Matches by town</h2>
+  <h2 class="collapsible" data-target="chart"><span id="chart-h">Matches by town</span> <span class="caret">▾</span></h2>
   <div class="chart" id="chart"></div>
 
   <div class="tabbar" id="tabbar">
@@ -331,6 +335,15 @@
   document.getElementById('tab-c55-n').textContent = comms.length;
   document.getElementById('t-55sold').textContent = comms.reduce(function(s,c){ return s + (Number(c.forSale)||0); }, 0);
   setTab('sf');
+
+  // ---- Collapsible headings (Market context, Matches by town) ----
+  Array.prototype.forEach.call(document.querySelectorAll('h2.collapsible'), function(h){
+    h.addEventListener('click', function(){
+      var el = document.getElementById(h.getAttribute('data-target'));
+      if(!el) return;
+      el.hidden = h.classList.toggle('collapsed');
+    });
+  });
 })();
 </script>
 </body>
